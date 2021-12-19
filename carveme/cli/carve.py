@@ -68,9 +68,8 @@ def maincall(inputfile, input_type='protein', outputfile=None, diamond_args=None
     if not os.path.exists(outputfolder):
         try:
             os.makedirs(outputfolder)
-        except:
-            print('Unable to create output folder:', outputfolder)
-            return
+        except Exception:
+            raise Exception('Unable to create output folder:', outputfolder)
 
     if soft:
         try:
@@ -97,8 +96,7 @@ def maincall(inputfile, input_type='protein', outputfile=None, diamond_args=None
         inputfile = download_ncbi_genome(inputfile, ncbi_table)
 
         if not inputfile:
-            print('Failed to download genome from NCBI.')
-            return
+            raise Exception('Failed to download genome from NCBI.')
 
         input_type = 'protein' if inputfile.endswith('.faa.gz') else 'dna'
 
@@ -110,14 +108,12 @@ def maincall(inputfile, input_type='protein', outputfile=None, diamond_args=None
         exit_code = run_blast(inputfile, input_type, blast_output, diamond_db, diamond_args, verbose)
 
         if exit_code is None:
-            print('Unable to run diamond (make sure diamond is available in your PATH).')
-            return
+            raise Exception('Unable to run diamond (make sure diamond is available in your PATH).')
 
         if exit_code != 0:
             print('Failed to run diamond.')
             if diamond_args is not None:
-                print('Incorrect diamond args? Please check documentation or use default args.')
-            return
+                raise Exception('Incorrect diamond args? Please check documentation or use default args.')
 
         annotations = load_diamond_results(blast_output)
     elif input_type == 'eggnog':
@@ -179,8 +175,7 @@ def maincall(inputfile, input_type='protein', outputfile=None, diamond_args=None
     scores, gene2gene = reaction_scoring(annotations, gprs, debug_output=debug_output)
 
     if scores is None:
-        print('The input genome did not match sufficient genes/reactions in the database.')
-        return
+        raise Exception('The input genome did not match sufficient genes/reactions in the database.')
 
     if not flavor:
         flavor = config.get('sbml', 'default_flavor')
@@ -216,8 +211,7 @@ def maincall(inputfile, input_type='protein', outputfile=None, diamond_args=None
         return
 
     if model is None:
-        print("Failed to build model.")
-        return
+        raise Exception("Failed to build model.")
 
     if not gapfill:
         save_cbmodel(model, outputfile, flavor=flavor)
